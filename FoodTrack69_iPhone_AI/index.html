@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FoodTrack 69" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/styles.css" />
+  <title>FoodTrack 69</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">BODY RECOMPOSITION</div>
+        <h1>FoodTrack 69</h1>
+      </div>
+      <div class="target-pill">68 → 69 kg</div>
+    </header>
+
+    <main>
+      <section class="view active" id="view-home">
+        <div class="hero card">
+          <div>
+            <div class="muted">今日の状態</div>
+            <div class="hero-title" id="todayLabel">--</div>
+          </div>
+          <select id="trainingType" class="compact-select" aria-label="トレーニング区分">
+            <option value="Rest">休養日</option>
+            <option value="Push">Push</option>
+            <option value="Pull">Pull</option>
+            <option value="LegsShoulder">Legs + Shoulder</option>
+          </select>
+        </div>
+
+        <div class="macro-grid">
+          <div class="macro card"><span>kcal</span><strong id="homeKcal">0</strong><small id="homeKcalGoal">/ 2500</small><div class="bar"><i id="barKcal"></i></div></div>
+          <div class="macro card"><span>Protein</span><strong id="homeP">0g</strong><small id="homePGoal">/ 130g</small><div class="bar"><i id="barP"></i></div></div>
+          <div class="macro card"><span>Fat</span><strong id="homeF">0g</strong><small id="homeFGoal">/ 60g</small><div class="bar"><i id="barF"></i></div></div>
+          <div class="macro card"><span>Carbs</span><strong id="homeC">0g</strong><small id="homeCGoal">/ 330g</small><div class="bar"><i id="barC"></i></div></div>
+        </div>
+
+        <div class="card coach-card">
+          <div class="section-head">
+            <div><div class="eyebrow">AI COACH</div><h2>今日の食事アドバイス</h2></div>
+            <button class="secondary small-btn" id="refreshAdvice">更新</button>
+          </div>
+          <div id="coachAdvice" class="coach-text">食事を記録すると、目標・今日のPFC・体重推移に合わせてアドバイスします。</div>
+          <div id="coachSuggestions" class="suggestions"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><h2>今日の食事</h2><button class="link-btn" data-goto="meal">＋ 写真で追加</button></div>
+          <div id="todayMeals" class="list-empty">まだ食事記録がありません。</div>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><h2>体重トレンド</h2><button class="link-btn" data-goto="body">記録する</button></div>
+          <div class="trend-row"><div><span class="muted">最新</span><strong id="latestWeight">--</strong></div><div><span class="muted">7日平均</span><strong id="avg7Weight">--</strong></div><div><span class="muted">目標</span><strong id="targetWeight">69.0 kg</strong></div></div>
+          <div id="weightTrendNote" class="micro-note">14日ほど記録すると増量ペースを判定します。</div>
+        </div>
+      </section>
+
+      <section class="view" id="view-meal">
+        <div class="page-title"><div><div class="eyebrow">MEAL SCAN</div><h2>食事を撮る</h2></div></div>
+        <div class="card capture-card">
+          <input id="mealPhotoInput" type="file" accept="image/*" capture="environment" hidden />
+          <button id="mealCameraBtn" class="camera-box">
+            <div class="camera-icon">📷</div>
+            <strong>食事を撮影 / 写真を選択</strong>
+            <small>iPhoneではカメラからそのまま撮影できます</small>
+          </button>
+          <img id="mealPreview" class="preview hidden" alt="食事写真プレビュー" />
+          <div class="form-grid two">
+            <label>食事区分<select id="mealType"><option>朝食</option><option>昼食</option><option>間食</option><option>夕食</option><option>夜食</option></select></label>
+            <label>補足（任意）<input id="mealNote" placeholder="例：ご飯は200g、鶏肉は150g" /></label>
+          </div>
+          <button id="analyzeMealBtn" class="primary full" disabled>AIで栄養を推定</button>
+          <div class="micro-note">写真だけでは量・油・調味料を正確に判定できないため、結果は推定値です。分析後に必ず修正できます。</div>
+        </div>
+
+        <div id="analysisCard" class="card hidden">
+          <div class="section-head"><div><div class="eyebrow">AI ESTIMATE</div><h2 id="analysisTitle">分析結果</h2></div><span id="analysisConfidence" class="confidence"></span></div>
+          <div id="detectedFoods" class="food-chips"></div>
+          <div class="form-grid four">
+            <label>kcal<input id="resultKcal" type="number" min="0" /></label>
+            <label>P (g)<input id="resultP" type="number" min="0" step="0.1" /></label>
+            <label>F (g)<input id="resultF" type="number" min="0" step="0.1" /></label>
+            <label>C (g)<input id="resultC" type="number" min="0" step="0.1" /></label>
+          </div>
+          <label>AIの推定メモ<textarea id="analysisNote" rows="3"></textarea></label>
+          <div id="mealAdvice" class="inline-advice"></div>
+          <button id="saveAnalyzedMeal" class="primary full">この内容で食事を保存</button>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><h2>手入力</h2><span class="muted">写真なしでもOK</span></div>
+          <label>食品・料理名<input id="manualName" placeholder="例：鮭定食" /></label>
+          <div class="form-grid four">
+            <label>kcal<input id="manualKcal" type="number" min="0" /></label>
+            <label>P (g)<input id="manualP" type="number" min="0" step="0.1" /></label>
+            <label>F (g)<input id="manualF" type="number" min="0" step="0.1" /></label>
+            <label>C (g)<input id="manualC" type="number" min="0" step="0.1" /></label>
+          </div>
+          <button id="saveManualMeal" class="secondary full">手入力で保存</button>
+        </div>
+      </section>
+
+      <section class="view" id="view-body">
+        <div class="page-title"><div><div class="eyebrow">BODY CHECK</div><h2>身体の変化を残す</h2></div></div>
+        <div class="card">
+          <div class="form-grid two">
+            <label>体重 (kg)<input id="weightInput" type="number" min="40" max="120" step="0.1" placeholder="68.0" /></label>
+            <label>ウエスト (cm)<input id="waistInput" type="number" min="50" max="140" step="0.1" placeholder="任意" /></label>
+          </div>
+          <button id="saveBodyNumbers" class="primary full">今日の数値を保存</button>
+          <div class="micro-note">おすすめ：起床後・トイレ後・飲食前。同じ条件で測ると比較しやすくなります。</div>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><div><h2>進捗写真</h2><div class="muted">端末内に保存。AIには送信しません。</div></div></div>
+          <div class="form-grid two">
+            <label>向き<select id="bodyPose"><option value="front">正面</option><option value="side">横</option><option value="back">背面</option></select></label>
+            <label>状態<select id="bodyFlex"><option value="relaxed">リラックス</option><option value="flexed">力を入れる</option></select></label>
+          </div>
+          <input id="bodyPhotoInput" type="file" accept="image/*" capture="user" hidden />
+          <button id="bodyCameraBtn" class="secondary full">📸 身体写真を撮る / 選ぶ</button>
+          <img id="bodyPreview" class="preview hidden" alt="身体写真プレビュー" />
+          <button id="saveBodyPhoto" class="primary full hidden">この写真を保存</button>
+          <div class="micro-note">比較しやすくするため、同じ場所・距離・照明・時間帯を意識してください。</div>
+        </div>
+
+        <div class="card">
+          <div class="section-head"><h2>写真ギャラリー</h2><select id="galleryFilter" class="compact-select"><option value="all">すべて</option><option value="front">正面</option><option value="side">横</option><option value="back">背面</option></select></div>
+          <div id="bodyGallery" class="photo-grid"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-history">
+        <div class="page-title"><div><div class="eyebrow">HISTORY</div><h2>履歴</h2></div></div>
+        <div class="card"><h2>最近の食事</h2><div id="mealHistory"></div></div>
+        <div class="card"><h2>最近の身体記録</h2><div id="bodyHistory"></div></div>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="page-title"><div><div class="eyebrow">SETTINGS</div><h2>あなた専用設定</h2></div></div>
+        <div class="card">
+          <h2>身体・目標</h2>
+          <div class="form-grid two">
+            <label>身長 (cm)<input id="setHeight" type="number" /></label>
+            <label>現在体重 (kg)<input id="setCurrentWeight" type="number" step="0.1" /></label>
+            <label>目標体重 (kg)<input id="setTargetWeight" type="number" step="0.1" /></label>
+            <label>目標増加 (kg/週)<input id="setWeeklyGain" type="number" step="0.05" /></label>
+          </div>
+          <h2 class="subheading">1日の目安</h2>
+          <div class="form-grid four">
+            <label>kcal<input id="setKcal" type="number" /></label>
+            <label>P<input id="setP" type="number" /></label>
+            <label>F<input id="setF" type="number" /></label>
+            <label>C<input id="setC" type="number" /></label>
+          </div>
+          <button id="saveSettings" class="primary full">設定を保存</button>
+        </div>
+        <div class="card">
+          <h2>iPhoneでアプリとして使う</h2>
+          <ol class="steps"><li>このアプリをSafariで開く</li><li>共有 →「ホーム画面に追加」</li><li>「Webアプリとして開く」を有効にして追加</li></ol>
+          <div class="micro-note">AI機能はインターネット接続が必要です。食事・体重の基本画面はキャッシュ後にオフラインでも開けます。</div>
+        </div>
+        <div class="card">
+          <h2>データ</h2>
+          <button id="exportData" class="secondary full">食事・体重データをバックアップ</button>
+          <label class="secondary full file-label">バックアップを読み込む<input id="importData" type="file" accept="application/json" hidden /></label>
+          <div class="micro-note">進捗写真は容量が大きいため、このJSONバックアップには含めません。写真はiPhone内のブラウザ領域に保存されます。</div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-view="home"><span>⌂</span><small>今日</small></button>
+      <button class="nav-btn" data-view="meal"><span>◎</span><small>食事撮影</small></button>
+      <button class="nav-btn" data-view="body"><span>◫</span><small>身体</small></button>
+      <button class="nav-btn" data-view="history"><span>≡</span><small>履歴</small></button>
+      <button class="nav-btn" data-view="settings"><span>⚙</span><small>設定</small></button>
+    </nav>
+  </div>
+  <div id="toast" class="toast"></div>
+  <div id="loading" class="loading hidden"><div class="spinner"></div><div id="loadingText">AIが分析中...</div></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

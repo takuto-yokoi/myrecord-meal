@@ -1,0 +1,14 @@
+{
+  "name":"FoodTrack 69 AI",
+  "short_name":"FoodTrack69",
+  "description":"172cm / 68kg → 69kgを目指す個人用ボディメイク食事管理アプリ",
+  "start_url":"/",
+  "display":"standalone",
+  "background_color":"#07101d",
+  "theme_color":"#07101d",
+  "orientation":"portrait-primary",
+  "icons":[
+    {"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"/icons/icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}

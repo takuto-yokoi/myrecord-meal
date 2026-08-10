@@ -1,0 +1,9 @@
+const schema={type:'object',additionalProperties:false,properties:{summary:{type:'string'},suggestions:{type:'array',items:{type:'string'}},priority:{type:'string',enum:['protein','calories','carbs','fat','balanced','wait_and_observe']}},required:['summary','suggestions','priority']};
+function outputText(data){for(const item of data.output||[]){if(item.type==='message')for(const c of item.content||[])if(c.type==='output_text'&&c.text)return c.text}return ''}
+export default async function handler(req,res){
+ if(req.method!=='POST')return res.status(405).json({error:'Method not allowed'});
+ if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:'OPENAI_API_KEY が設定されていません'});
+ const x=req.body||{},p=x.profile||{},t=x.today||{};
+ const prompt=`あなたは個人用ボディメイク食事コーチです。目的は「172cm・68kg前後から69kg前後へゆっくり移行し、ウエストを大きく崩さず胸・肩・背中などの筋肥大を進めること」。現在設定: 身長${p.height||172}cm、体重${p.currentWeight||68}kg、目標${p.targetWeight||69}kg、目安${p.kcal||2500}kcal、P${p.p||130}g、F${p.f||60}g、C${p.c||330}g。今日:${Math.round(t.kcal||0)}kcal、P${Math.round(t.p||0)}g、F${Math.round(t.f||0)}g、C${Math.round(t.c||0)}g。トレーニング:${x.training||'Rest'}。食事:${JSON.stringify(x.meals||[])}。7日体重トレンド:${JSON.stringify(x.weightTrend||null)}。過度に細かい食事制限は避け、継続しやすさを最優先。1日だけの体重変動でカロリー変更を勧めず、2〜3週間の傾向が必要と明記する。summaryは最大4文。suggestionsは今から実行できる食品・食事案を0〜3個、短く。タンパク質不足、総カロリー不足、脂質過多などを今日の残り量から判断する。医療診断はしない。`;
+ try{const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-5.6',input:prompt,text:{format:{type:'json_schema',name:'daily_food_advice',strict:true,schema}}})});const data=await r.json();if(!r.ok)return res.status(r.status).json({error:data?.error?.message||'OpenAI API error'});return res.status(200).json(JSON.parse(outputText(data)))}catch(e){return res.status(500).json({error:'AIアドバイスでエラーが発生しました'})}
+}
